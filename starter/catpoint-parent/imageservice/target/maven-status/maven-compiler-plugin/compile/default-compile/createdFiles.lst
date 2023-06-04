@@ -1,0 +1,5 @@
+com\udacity\catpoint\imageservice\FakeImageService.class
+com\udacity\catpoint\imageservice\AwsImageService.class
+module-info.class
+com\udacity\catpoint\imageservice\AWSRekognitionClient.class
+com\udacity\catpoint\imageservice\ImageService.class
