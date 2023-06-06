@@ -169,11 +169,13 @@ class SecurityServiceTest {
     @Test
     void whenImageNotCat_And_SensorsNotActive_Then_ChangeToNoAlarm(){
         when(imageService.imageContainsCat(any(), anyFloat())).thenReturn(false);
-        Sensor sensorToActivate = (Sensor) (sensors.stream().toArray())[0];
+        Sensor s1 = (Sensor) (sensors.stream().toArray())[0];
+        s1.setActive(false);
+        Sensor s2 = (Sensor) (sensors.stream().toArray())[1];
+        s2.setActive(false);
+        when (securityRepository.getSensors()).thenReturn(sensors);
 
-        sensorToActivate.setActive(false);
         BufferedImage catImage = new BufferedImage(1,1,1);
-
         securityService.processImage(catImage);
 
         ArgumentCaptor<AlarmStatus> captor = ArgumentCaptor.forClass(AlarmStatus.class);

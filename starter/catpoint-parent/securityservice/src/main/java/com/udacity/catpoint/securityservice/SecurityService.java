@@ -25,6 +25,7 @@ public class SecurityService {
     private ImageService imageService;
     private SecurityRepository securityRepository;
     private Set<StatusListener> statusListeners = new HashSet<>();
+    private boolean catDetected = false;
 
     public SecurityService(SecurityRepository securityRepository, ImageService imageService) {
         this.securityRepository = securityRepository;
@@ -75,8 +76,20 @@ public class SecurityService {
             safeSensors.stream().forEach(s -> {
                 this.changeSensorActivationStatus(s, false);
             });
+            if(catDetected) {
+                setAlarmStatus(AlarmStatus.ALARM);
+            }
         }
         securityRepository.setArmingStatus(armingStatus);
+    }
+
+    private boolean areAllSensorsInactive() {
+        for (Sensor sensor : this.getSensors()) {
+            if (sensor.getActive()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -88,7 +101,9 @@ public class SecurityService {
         if(cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
         } else {
-            setAlarmStatus(AlarmStatus.NO_ALARM);
+            if (areAllSensorsInactive()) {
+                setAlarmStatus(AlarmStatus.NO_ALARM);
+            }
         }
         statusListeners.forEach(sl -> sl.catDetected(cat));
     }
@@ -161,6 +176,7 @@ public class SecurityService {
 
         sensor.setActive(active);
         securityRepository.updateSensor(sensor);
+        statusListeners.forEach(sl -> sl.sensorStatusChanged());
     }
 
     /**
@@ -169,7 +185,8 @@ public class SecurityService {
      * @param currentCameraImage
      */
     public void processImage(BufferedImage currentCameraImage) {
-        catDetected(imageService.imageContainsCat(currentCameraImage, 50.0f));
+        catDetected = imageService.imageContainsCat(currentCameraImage, 50.0f);
+        catDetected(catDetected);
     }
 
     public AlarmStatus getAlarmStatus() {
